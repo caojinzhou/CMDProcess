@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataFill.cs" />
     <Compile Include="Discalculate.cs" />
     <Compile Include="HWIdentifiction.cs" />
     <Compile Include="Program.cs" />

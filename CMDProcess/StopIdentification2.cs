@@ -25,7 +25,6 @@ namespace CMDProcess
             Timespan = timespan;
             DIST = distance;
             Stationinfo = StationInfo;
-            int m = 0;
             int n = SpecialUser.Count();
             int CurrentIndex = -1;
 

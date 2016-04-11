@@ -15,14 +15,14 @@ namespace CMDProcess
             int Distance = 400;
             double Timespan = 1.0;
 
-            string ResultdirectoryPath = @"D:\\201512_CMProcess\\CMDProcessResult";
+            string ResultdirectoryPath = @"D:\\201512_CMProcess\\CMDProcessResult_version2";
 
             if (!Directory.Exists(ResultdirectoryPath))//如果路径不存在
             {
                 Directory.CreateDirectory(ResultdirectoryPath);//创建一个路径的文件夹
             }
 
-            string ResultdirectoryPath2 = @"D:\\201512_CMProcess\\CMDProcessResult2";
+            string ResultdirectoryPath2 = @"D:\\201512_CMProcess\\CMDProcessResult2_version2";
 
             if (!Directory.Exists(ResultdirectoryPath2))//如果路径不存在
             {
@@ -165,29 +165,46 @@ namespace CMDProcess
                     int NumofClusters = 0;
                     int NumofClustersRemoved = 0;
                     int numofSTUser = 0;
+                    List<UserData> UserData = new List<UserData>();
 
                     foreach (var tt in tempdata)
                     {
-                        //计算停留点
-                        SpecialSTUser = STPointInstance.ClusterAnalysis(tt.Value,Distance,Timespan, StationInfo);
+                        //T1:先判断原始轨迹点的个数。
+                        int CountOrigin = tt.Value.Count();
+                        if (CountOrigin < 18)
+                            return;
 
+                        //T2：直接进行信号补齐！！！表示有完整24小时数据，但是点数不一定24个。
+                        UserData = DataFill.DataFillMethod(tt.Value);
+
+                        //T3：计算停留点
+                        SpecialSTUser = STPointInstance.ClusterAnalysis(UserData, Distance, Timespan, StationInfo);
+                        //T4：根据停留点个数
                         if (SpecialSTUser.Count() == 0)
                         {
                             continue;
                         }
+                        else if(SpecialSTUser.Count()==1)
+                        {
+                            userhwinfo1.Add(new Tuple<int, int, int>(SpecialSTUser[0].userid,SpecialSTUser[0].stationid,0));
+                        }
+                        else if(SpecialSTUser.Count()==2)
+                        {
+
+                        }
+                        else if(SpecialSTUser.Count()>2)
+                        {
+
+                        }
 
                         //输出停留点
                         foreach (CellTra de in SpecialSTUser)
-                        {
                             swST.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}", de.userid, de.stationid, StationInfo[de.stationid][0], StationInfo[de.stationid][1], de.intimeindex, de.outtimeindex, de.NumST);
-                            //swST.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}", de.userid, de.stationid, de.intimeindex, de.outtimeindex, de.NumST);
-                        }
-
-
 
                         NumofCandiateSTPoint += STPointInstance.NumofCandiateSTPoint;
                         NumofClusters += STPointInstance.NumofClusters;
                         NumofClustersRemoved += STPointInstance.NumofClustersRemoved;
+                        
                         //输出每个用户不同轨迹点个数，作为验证参数之用。
                         swSTNum.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}", tt.Key, tt.Value.Count(),STPointInstance.NumofCandiateSTPoint,STPointInstance.NumofClusters,STPointInstance.NumofClustersRemoved);
 
@@ -195,7 +212,7 @@ namespace CMDProcess
                         //Home- Work 识别,使用两种方法探测1、原始序列；2、停留点序列
                         userhwinfo1.Add(HWInfo);
 
-                        Tuple<int, int, int> userhwinfo2 = HWIdentifiction.HomeWorkIdentify(SpecialSTUser);
+                       // Tuple<int, int, int> userhwinfo2 = HWIdentifiction.HomeWorkIdentify(SpecialSTUser);
                         //userid，home，work.若为0，则为空
                         swHW.WriteLine("{0}\t{1}\t{2}", HWInfo.Item1, HWInfo.Item2, HWInfo.Item3);
                         numofSTUser++;

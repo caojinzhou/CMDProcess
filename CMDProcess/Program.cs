@@ -15,14 +15,14 @@ namespace CMDProcess
             int Distance = 400;
             double Timespan = 1.0;
 
-            string ResultdirectoryPath = @"D:\\201512_CMProcess\\CMDProcessResult_version2";
+            string ResultdirectoryPath = @"D:\\201512_CMProcess\\CMDProcessResult\\version2";
 
             if (!Directory.Exists(ResultdirectoryPath))//如果路径不存在
             {
                 Directory.CreateDirectory(ResultdirectoryPath);//创建一个路径的文件夹
             }
 
-            string ResultdirectoryPath2 = @"D:\\201512_CMProcess\\CMDProcessResult2_version2";
+            string ResultdirectoryPath2 = @"D:\\201512_CMProcess\\CMDProcessResult\\version2\\2";
 
             if (!Directory.Exists(ResultdirectoryPath2))//如果路径不存在
             {
@@ -165,6 +165,7 @@ namespace CMDProcess
                     int NumofClusters = 0;
                     int NumofClustersRemoved = 0;
                     int numofSTUser = 0;
+
                     List<UserData> UserData = new List<UserData>();
 
                     foreach (var tt in tempdata)
@@ -172,52 +173,102 @@ namespace CMDProcess
                         //T1:先判断原始轨迹点的个数。
                         int CountOrigin = tt.Value.Count();
                         if (CountOrigin < 18)
-                            return;
+                            continue;
 
-                        //T2：直接进行信号补齐！！！表示有完整24小时数据，但是点数不一定24个。
+                        //T2：直接进行信号补齐！！！表示有完整24小时数据。
                         UserData = DataFill.DataFillMethod(tt.Value);
 
                         //T3：计算停留点
                         SpecialSTUser = STPointInstance.ClusterAnalysis(UserData, Distance, Timespan, StationInfo);
-                        //T4：根据停留点个数
-                        if (SpecialSTUser.Count() == 0)
+
+                        if (SpecialSTUser.Count()==0)
+                            continue;
+                        //T4:得到当前唯一活动点的个数
+                        for (int q = 0; q < SpecialSTUser.Count(); q++)
+                        {
+
+                            //地点数据
+                            if (q == 0)
+                                SpatialUserInfo.Add(SpecialSTUser[0].userid, new List<int>() { SpecialSTUser[q].stationid });
+                            else
+                                SpatialUserInfo[SpecialSTUser[0].userid].Add(SpecialSTUser[q].stationid);
+                        }
+                        int DiffSTPoint = SpatialUserInfo[SpecialSTUser[0].userid].Distinct().Count();
+
+
+                        //T5：根据唯一停留点个数,判断不同类别的家orwork形式
+                        Tuple<int, int, int> HWInfo=null;
+                        if (DiffSTPoint == 0)
                         {
                             continue;
                         }
-                        else if(SpecialSTUser.Count()==1)
+                        //只有1个唯一停留点，直接指定为home类别。
+                        else if(DiffSTPoint == 1)
                         {
-                            userhwinfo1.Add(new Tuple<int, int, int>(SpecialSTUser[0].userid,SpecialSTUser[0].stationid,0));
+                            //需不需要延展到24小时？？
+                            HWInfo = new Tuple<int, int, int>(SpecialSTUser[0].userid, SpecialSTUser[0].stationid, 0);
                         }
-                        else if(SpecialSTUser.Count()==2)
+                        //有2个唯一停留点，一个为home，一个为work
+                        else if(DiffSTPoint == 2)
                         {
-
+                            //专为两个停留点设计的提取算法。home和work都必须有。但可以是同一个点。
+                            HWInfo = HWIdentifiction.HomeWorkIdentify(SpecialSTUser,true);
                         }
-                        else if(SpecialSTUser.Count()>2)
+                        else if(DiffSTPoint > 2)
                         {
-
+                            //专为大于2个点停留点设计的提取算法。有约束条件，50%。
+                            HWInfo = HWIdentifiction.HomeWorkIdentify(SpecialSTUser,false);
                         }
 
-                        //输出停留点
-                        foreach (CellTra de in SpecialSTUser)
+                        if(HWInfo.Item2!=0)
+                        {
+                            //T6:针对22点最后一小时，如果原始记录上的位置位于home位置，或者与home位置400米领域内，则单独标记为一个home活动。
+                            double lon1 = Convert.ToDouble(StationInfo[UserData.Last().stationid][1]);
+                            double lat1 = Convert.ToDouble(StationInfo[UserData.Last().stationid][0]);
+                            double lon2 = Convert.ToDouble(StationInfo[HWInfo.Item2][1]);
+                            double lat2 = Convert.ToDouble(StationInfo[HWInfo.Item2][0]);
+                            if (Discalculate.LonLatTransform(lon1, lat1, lon2, lat2) < Distance && SpecialSTUser.Last().outtimeindex.Hour < 22)
+                            {
+                                if (UserData[UserData.Count() - 2].timeindex.Hour == 22)
+                                {
+                                    lon1 = Convert.ToDouble(StationInfo[UserData[UserData.Count() - 2].stationid][1]);
+                                    lat1 = Convert.ToDouble(StationInfo[UserData[UserData.Count() - 2].stationid][0]);
+                                    if (Discalculate.LonLatTransform(lon1, lat1, lon2, lat2) < Distance)
+                                    {
+                                        SpecialSTUser.Add(new CellTra(UserData[UserData.Count() - 2].timeindex, UserData.Last().timeindex, UserData.Last().userid, HWInfo.Item2, 2));
+                                    }
+                                }
+                                else
+                                {
+                                    SpecialSTUser.Add(new CellTra(UserData.Last().timeindex, UserData.Last().timeindex, UserData.Last().userid, HWInfo.Item2, 1));
+                                }
+                            }
+                        }
+
+
+                        //T6:输出停留点
+                            foreach (CellTra de in SpecialSTUser)
                             swST.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}", de.userid, de.stationid, StationInfo[de.stationid][0], StationInfo[de.stationid][1], de.intimeindex, de.outtimeindex, de.NumST);
-
-                        NumofCandiateSTPoint += STPointInstance.NumofCandiateSTPoint;
-                        NumofClusters += STPointInstance.NumofClusters;
-                        NumofClustersRemoved += STPointInstance.NumofClustersRemoved;
                         
                         //输出每个用户不同轨迹点个数，作为验证参数之用。
-                        swSTNum.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}", tt.Key, tt.Value.Count(),STPointInstance.NumofCandiateSTPoint,STPointInstance.NumofClusters,STPointInstance.NumofClustersRemoved);
+                        //NumofCandiateSTPoint += STPointInstance.NumofCandiateSTPoint;
+                        //NumofClusters += STPointInstance.NumofClusters;
+                        NumofClustersRemoved += SpecialSTUser.Count();
+                        //swSTNum.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}", tt.Key, tt.Value.Count(),STPointInstance.NumofCandiateSTPoint,STPointInstance.NumofClusters,STPointInstance.NumofClustersRemoved);
 
-                        var HWInfo = HWIdentifiction.HomeWorkIdentify(tt.Value);
+
                         //Home- Work 识别,使用两种方法探测1、原始序列；2、停留点序列
-                        userhwinfo1.Add(HWInfo);
+                        //var HWInfo = HWIdentifiction.HomeWorkIdentify(tt.Value);
+                        //userhwinfo1.Add(HWInfo);
+                        // Tuple<int, int, int> userhwinfo2 = HWIdentifiction.HomeWorkIdentify(SpecialSTUser);
 
-                       // Tuple<int, int, int> userhwinfo2 = HWIdentifiction.HomeWorkIdentify(SpecialSTUser);
+                        //T7:将homeworkinfo存储到list容器中,并输出。
+                        userhwinfo1.Add(HWInfo);
                         //userid，home，work.若为0，则为空
                         swHW.WriteLine("{0}\t{1}\t{2}", HWInfo.Item1, HWInfo.Item2, HWInfo.Item3);
                         numofSTUser++;
 
-                        //查找到每个用户出现的不同地点的个数
+                        //T4:统计每个用户活动点的时间分布
                         for (int q = 0; q < SpecialSTUser.Count(); q++)
                         {
                             //前一晚23点的问题。
@@ -237,26 +288,19 @@ namespace CMDProcess
                                 }
                             }
 
-                            //地点数据
-                            if (q==0)
-                                SpatialUserInfo.Add(SpecialSTUser[0].userid, new List<int>() { SpecialSTUser[q].stationid });
-                            else
-                                SpatialUserInfo[SpecialSTUser[0].userid].Add(SpecialSTUser[q].stationid);
                         }
 
-                        DiffSTPointByUser.Add(SpecialSTUser[0].userid, SpatialUserInfo[SpecialSTUser[0].userid].Distinct().Count());
-                        STPointCountByUser.Add(SpecialSTUser[0].userid, STPointInstance.NumofClustersRemoved);
+                        DiffSTPointByUser.Add(SpecialSTUser[0].userid, DiffSTPoint);
+                        STPointCountByUser.Add(SpecialSTUser[0].userid, SpecialSTUser.Count());
 
                         SpatialUserInfo.Clear();
                         SpecialSTUser.Clear();
                     }
 
 
-
-                    //输出家和工作信息
                     int UserCount = tempdata.Keys.Count();
 
-                    ////统计该文件所有的家和工作个数
+                    ////T9:统计该文件所有的家和工作个数
                     int Both = 0;
                     int OnlyH = 0;
                     int OnlyW = 0;
@@ -275,11 +319,11 @@ namespace CMDProcess
                         {
                             if (tt.Item2 != 0 && tt.Item3 == 0)
                             {
-                                OnlyW++;
+                                OnlyH++;
                             }
                             else if (tt.Item3 != 0 && tt.Item2 == 0)
                             {
-                                OnlyH++;
+                                OnlyW++;
                             }
                             else if (tt.Item2 == 0 && tt.Item3 == 0)
                             {
@@ -291,8 +335,8 @@ namespace CMDProcess
                     swHWStat.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}", n, userhwinfo1.Count(), Both, BothSame, OnlyH, OnlyW, Neither);
 
 
-                    swlog.WriteLine(n + "\t" + m+"\t"+ UserCount+"\t"+ numofSTUser);
-                    swSTRatio.WriteLine(n + "\t"+ numofSTUser + "\t" + m + "\t" + NumofCandiateSTPoint + "\t" + NumofClusters + "\t" + NumofClustersRemoved);
+                    swlog.WriteLine(n + "\t" + m+"\t"+ UserCount+"\t"+ numofSTUser+"\t"+ NumofClustersRemoved);
+                    //swSTRatio.WriteLine(n + "\t"+ numofSTUser + "\t" + m + "\t" + NumofCandiateSTPoint + "\t" + NumofClusters + "\t" + NumofClustersRemoved);
                     Console.WriteLine("文件序号：" + n + "数据条数：" + m);
                     Console.WriteLine("该文件总用户数：" + UserCount);
                     Console.WriteLine("有停留点用户数：" + numofSTUser);

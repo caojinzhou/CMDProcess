@@ -56,7 +56,7 @@ namespace CMDProcess
                         if (DistanceCalculate(SpecialUser.ElementAt(i), CandiCluster[p]) < DIST)
                         {
                             //增加判断时间，跟当前要加入的cluster的outtimeindex比较，如大于一小时，则不加入。
-                            if ((SpecialUser[i].timeindex - CandiCluster[p].outtimeindex).TotalHours < 1)
+                            if ((SpecialUser[i].timeindex - CandiCluster[p].outtimeindex).TotalHours <= 1)
                             {
                                 CandiCluster[p].PutinCluster(SpecialUser[i]);
                                 CurrentCluster = CandiCluster[p];
@@ -75,11 +75,13 @@ namespace CMDProcess
             }
 
             NumofClusters = CandiCluster.Count();
-            //通过时间计算,移除outtime与intime时间差小于1小时的候选点
+            //通过时间计算,移除outtime与intime时间差小于1小时的候选点。小于1小时即表示有2个点存在。
             CandiCluster.RemoveAll((T => (T.outtimeindex - T.intimeindex).TotalHours < Timespan));
             NumofClustersRemoved = CandiCluster.Count();
             NumofCandiateSTPoint = 0;
-            foreach (var tt in STMethod1(CandiCluster))
+            
+            //更改结果类
+            foreach (var tt in CandiCluster)
             {
                 STResult2.Add(new CellTra(tt.intimeindex, tt.outtimeindex, tt.userid, tt.stationNum.ElementAt(0).Key, tt.DatainCluster.Count()));
             }
@@ -118,6 +120,7 @@ namespace CMDProcess
             return Distance /= currentS.DatainCluster.Count();
         }
 
+        //时间扩充函数
         private List<CellTra2> STMethod1(List<CellTra2> CTResult)
         {
             //List<CellTra> STResult = new List<CellTra>();

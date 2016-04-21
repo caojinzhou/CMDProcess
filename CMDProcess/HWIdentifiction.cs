@@ -38,14 +38,14 @@ namespace CMDProcess
                 //if((suser.timeindex>=43&&suser.timeindex<=47)||(suser.timeindex>=0&&suser.timeindex<=11))
                 {
                     //
-                    if (!TowerHomeRank.ContainsKey(suser.stationid))
+                    if (!TowerHomeRank.ContainsKey(suser.cellid))
                     {
-                        TowerHomeRank.Add(suser.stationid, 1);
+                        TowerHomeRank.Add(suser.cellid, 1);
                         continue;
                     }
                     else
                     {
-                        TowerHomeRank[suser.stationid]++;
+                        TowerHomeRank[suser.cellid]++;
                         continue;
                     }
                 }
@@ -55,14 +55,14 @@ namespace CMDProcess
                 //if((suser.timeindex>=17&&suser.timeindex<=23)||(suser.timeindex>=29&&suser.timeindex<=33))
                 {
 
-                    if (!TowerWorkRank.ContainsKey(suser.stationid))
+                    if (!TowerWorkRank.ContainsKey(suser.cellid))
                     {
-                        TowerWorkRank.Add(suser.stationid, 1);
+                        TowerWorkRank.Add(suser.cellid, 1);
                         continue;
                     }
                     else
                     {
-                        TowerWorkRank[suser.stationid]++;
+                        TowerWorkRank[suser.cellid]++;
                         continue;
                     }
                 }
@@ -142,13 +142,13 @@ namespace CMDProcess
                 }
                 finally
                 {
-                    if (!HomeStationRank.ContainsKey(tt.stationid))
+                    if (!HomeStationRank.ContainsKey(tt.cellid))
                     {
-                        HomeStationRank.Add(tt.stationid, RateofOverlap);
+                        HomeStationRank.Add(tt.cellid, RateofOverlap);
                     }
                     else
                     {
-                        HomeStationRank[tt.stationid] += RateofOverlap; ;
+                        HomeStationRank[tt.cellid] += RateofOverlap; ;
                     }
                 }
             }
@@ -194,13 +194,13 @@ namespace CMDProcess
                 }
                 finally
                 {
-                    if (!WorkStationRank.ContainsKey(tt.stationid))
+                    if (!WorkStationRank.ContainsKey(tt.cellid))
                     {
-                        WorkStationRank.Add(tt.stationid, RateofOverlap);
+                        WorkStationRank.Add(tt.cellid, RateofOverlap);
                     }
                     else
                     {
-                        WorkStationRank[tt.stationid] += RateofOverlap; ;
+                        WorkStationRank[tt.cellid] += RateofOverlap; ;
                     }
                 }
             }

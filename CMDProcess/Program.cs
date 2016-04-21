@@ -15,14 +15,14 @@ namespace CMDProcess
             int Distance = 400;
             double Timespan = 1.0;
 
-            string ResultdirectoryPath = @"D:\\201512_CMProcess\\CMDProcessResult\\version2";
+            string ResultdirectoryPath = @"D:\\201604_CMProcess\\CMDProcessResult\\version1";
 
             if (!Directory.Exists(ResultdirectoryPath))//如果路径不存在
             {
                 Directory.CreateDirectory(ResultdirectoryPath);//创建一个路径的文件夹
             }
 
-            string ResultdirectoryPath2 = @"D:\\201512_CMProcess\\CMDProcessResult\\version2\\2";
+            string ResultdirectoryPath2 = @"D:\\201604_CMProcess\\CMDProcessResult\\version1\\base";
 
             if (!Directory.Exists(ResultdirectoryPath2))//如果路径不存在
             {
@@ -31,7 +31,7 @@ namespace CMDProcess
 
             //结果输出路径
             string directoryPath_STInfo = ResultdirectoryPath + "\\STDataResult_" + Distance + "_" + Timespan + "Hour";//定义一个路径变量
-            string directoryPath_HWInfo = ResultdirectoryPath + "\\HWInfoResult_0.5";//定义一个路径变量
+            string directoryPath_HWInfo = ResultdirectoryPath + "\\HWInfoResult";//定义一个路径变量
             string directoryPath_STNumStatistic = ResultdirectoryPath2 + "\\STNumStatistic";//定义一个路径变量
             string directoryPath_STNumInfo = directoryPath_STNumStatistic + "\\STNumDataResult_" + Distance + "_" + Timespan + "Hour";//定义一个路径变量
             string directoryPath_HWStatist = ResultdirectoryPath2 + "\\HWStatistResult";
@@ -63,7 +63,7 @@ namespace CMDProcess
 
             StreamWriter swST;
             StreamWriter swHW;
-            StreamWriter swSTNum;
+            //StreamWriter swSTNum;
             StreamWriter swHWStat = new StreamWriter(Path.Combine(directoryPath_HWStatist, "HWStatisTotalUser_0.5.txt"), false);
             StreamWriter swSTRatio = new StreamWriter(Path.Combine(directoryPath_STNumStatistic, "STRatioTotalUser_" + Distance + "_" + Timespan + "Hour.txt"), false);
             StreamWriter swlog = new StreamWriter(ResultdirectoryPath2 + "\\log_" + Distance + "_" + Timespan + "Hour.txt");
@@ -81,13 +81,42 @@ namespace CMDProcess
 
             //输入轨迹存储
             Dictionary<int, List<UserData>> tempdata = new Dictionary<int, List<UserData>>();
-            Dictionary<int, string[]> StationInfo= new Dictionary<int, string[]>();
+            //Dictionary<int, string[]> StationInfo= new Dictionary<int, string[]>();
+            Dictionary<int, string[]> GridCellInfo = new Dictionary<int, string[]>();
 
             //基站id数据
+            //try
+            //{
+
+            //    using (StreamReader sr = new StreamReader("D:\\201512_CMProcess\\stationIdInfo5934.txt"))
+            //    {
+
+            //        String line;
+            //        int i = 0;
+            //        while ((line = sr.ReadLine()) != null)
+            //        {
+            //            string[] strArr = line.Split('\t');
+            //            String[] LatLon = new string[] { strArr[1], strArr[2] };
+
+            //            StationInfo.Add(Convert.ToInt32(strArr[0]), LatLon);
+            //            i++;
+            //        }
+            //        Console.WriteLine(i + "  station id has been read");
+
+            //    }
+
+            //}
+            //catch (Exception e)
+            //{
+            //    Console.WriteLine("The file could not be read:");
+            //    Console.WriteLine(e.Message);
+            //}
+
+            //Cell id数据
             try
             {
 
-                using (StreamReader sr = new StreamReader("D:\\201512_CMProcess\\stationIdInfo5934.txt"))
+                using (StreamReader sr = new StreamReader("D:\\201604_CMProcess\\GridCellInfo.txt"))
                 {
 
                     String line;
@@ -95,12 +124,12 @@ namespace CMDProcess
                     while ((line = sr.ReadLine()) != null)
                     {
                         string[] strArr = line.Split('\t');
-                        String[] LatLon = new string[] { strArr[1], strArr[2] };
+                        String[] LatLon = new string[] { strArr[2], strArr[3] };
 
-                        StationInfo.Add(Convert.ToInt32(strArr[0]), LatLon);
+                        GridCellInfo.Add(Convert.ToInt32(strArr[0]), LatLon);
                         i++;
                     }
-                    Console.WriteLine(i + "  station id has been read");
+                    Console.WriteLine(i + "  cell id has been read");
 
                 }
 
@@ -112,11 +141,11 @@ namespace CMDProcess
             }
 
             //分163个文件读
-            DirectoryInfo dir = new System.IO.DirectoryInfo("D:\\201512_CMProcess\\DataStatisticalResult");
+            DirectoryInfo dir = new System.IO.DirectoryInfo("D:\\201604_CMProcess\\DataStatisticalResult");
 
             //停留点数据
             List<CellTra> SpecialSTUser = new List<CellTra>();
-            StopIdentification2 STPointInstance = new StopIdentification2();
+            GridStopIdentification STPointInstance = new GridStopIdentification();
             int n = 0;
             List<Tuple<int, int, int>> userhwinfo1 = new List<Tuple<int, int, int>>();
 
@@ -134,15 +163,16 @@ namespace CMDProcess
                         string[] strArr = line.Split('\t');
                         DateTime dt = DateTime.ParseExact(strArr[0], "yyyy/M/dd H:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
                         int userid=Convert.ToInt32(strArr[1]);
-                        int stationid=Convert.ToInt32(strArr[2]);
+                        //int stationid=Convert.ToInt32(strArr[2]);
+                        int cellid = Convert.ToInt32(strArr[3]);
                         //添加到hash表中，key为用户id
                         if (tempdata.ContainsKey(userid))
                         {
-                            tempdata[userid].Add(new UserData(dt,userid,stationid));
+                            tempdata[userid].Add(new UserData(dt,userid,cellid));
                         }
                         else
                         {
-                            tempdata.Add(Convert.ToInt32(strArr[1]), new List<UserData>() {new UserData(dt, userid, stationid) });
+                            tempdata.Add(Convert.ToInt32(strArr[1]), new List<UserData>() {new UserData(dt, userid,cellid) });
                         }
                         m++;
                     }
@@ -153,7 +183,7 @@ namespace CMDProcess
                     string filePath_HW = "HWInfoByUser_" + n + ".txt";
 
                     swST = new StreamWriter(Path.Combine(directoryPath_STInfo, filePath), false);
-                    swSTNum = new StreamWriter(Path.Combine(directoryPath_STNumInfo, filePath), false);
+                    //swSTNum = new StreamWriter(Path.Combine(directoryPath_STNumInfo, filePath), false);
                     swHW = new StreamWriter(Path.Combine(directoryPath_HWInfo, filePath_HW), false);
 
 
@@ -179,7 +209,7 @@ namespace CMDProcess
                         UserData = DataFill.DataFillMethod(tt.Value);
 
                         //T3：计算停留点
-                        SpecialSTUser = STPointInstance.ClusterAnalysis(UserData, Distance, Timespan, StationInfo);
+                        SpecialSTUser = STPointInstance.ClusterAnalysis(UserData, Distance, Timespan);
 
                         if (SpecialSTUser.Count()==0)
                             continue;
@@ -189,9 +219,9 @@ namespace CMDProcess
 
                             //地点数据
                             if (q == 0)
-                                SpatialUserInfo.Add(SpecialSTUser[0].userid, new List<int>() { SpecialSTUser[q].stationid });
+                                SpatialUserInfo.Add(SpecialSTUser[0].userid, new List<int>() { SpecialSTUser[q].cellid });
                             else
-                                SpatialUserInfo[SpecialSTUser[0].userid].Add(SpecialSTUser[q].stationid);
+                                SpatialUserInfo[SpecialSTUser[0].userid].Add(SpecialSTUser[q].cellid);
                         }
                         int DiffSTPoint = SpatialUserInfo[SpecialSTUser[0].userid].Distinct().Count();
 
@@ -205,8 +235,7 @@ namespace CMDProcess
                         //只有1个唯一停留点，直接指定为home类别。
                         else if(DiffSTPoint == 1)
                         {
-                            //需不需要延展到24小时？？
-                            HWInfo = new Tuple<int, int, int>(SpecialSTUser[0].userid, SpecialSTUser[0].stationid, 0);
+                            HWInfo = new Tuple<int, int, int>(SpecialSTUser[0].userid, SpecialSTUser[0].cellid, 0);
                         }
                         //有2个唯一停留点，一个为home，一个为work
                         else if(DiffSTPoint == 2)
@@ -222,18 +251,13 @@ namespace CMDProcess
 
                         if(HWInfo.Item2!=0)
                         {
-                            //T6:针对22点最后一小时，如果原始记录上的位置位于home位置，或者与home位置400米领域内，则单独标记为一个home活动。
-                            double lon1 = Convert.ToDouble(StationInfo[UserData.Last().stationid][1]);
-                            double lat1 = Convert.ToDouble(StationInfo[UserData.Last().stationid][0]);
-                            double lon2 = Convert.ToDouble(StationInfo[HWInfo.Item2][1]);
-                            double lat2 = Convert.ToDouble(StationInfo[HWInfo.Item2][0]);
-                            if (Discalculate.LonLatTransform(lon1, lat1, lon2, lat2) < Distance && SpecialSTUser.Last().outtimeindex.Hour < 22)
+                            //T6:针对22点最后一小时，如果原始记录上的位置位于home位置，则单独标记为一个home活动。
+
+                            if (UserData.Last().cellid==HWInfo.Item2 && SpecialSTUser.Last().outtimeindex.Hour < 22)
                             {
                                 if (UserData[UserData.Count() - 2].timeindex.Hour == 22)
                                 {
-                                    lon1 = Convert.ToDouble(StationInfo[UserData[UserData.Count() - 2].stationid][1]);
-                                    lat1 = Convert.ToDouble(StationInfo[UserData[UserData.Count() - 2].stationid][0]);
-                                    if (Discalculate.LonLatTransform(lon1, lat1, lon2, lat2) < Distance)
+                                    if (UserData[UserData.Count() - 2].cellid==HWInfo.Item2)
                                     {
                                         SpecialSTUser.Add(new CellTra(UserData[UserData.Count() - 2].timeindex, UserData.Last().timeindex, UserData.Last().userid, HWInfo.Item2, 2));
                                     }
@@ -248,7 +272,7 @@ namespace CMDProcess
 
                         //T6:输出停留点
                             foreach (CellTra de in SpecialSTUser)
-                            swST.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}", de.userid, de.stationid, StationInfo[de.stationid][0], StationInfo[de.stationid][1], de.intimeindex, de.outtimeindex, de.NumST);
+                            swST.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}", de.userid, de.cellid, GridCellInfo[de.cellid][0], GridCellInfo[de.cellid][1], de.intimeindex, de.outtimeindex, de.NumST);
                         
                         //输出每个用户不同轨迹点个数，作为验证参数之用。
                         //NumofCandiateSTPoint += STPointInstance.NumofCandiateSTPoint;
@@ -347,8 +371,8 @@ namespace CMDProcess
                     swHW.Flush();
                     swHW.Close();
 
-                    swSTNum.Flush();
-                    swSTNum.Close();
+                    //swSTNum.Flush();
+                    //swSTNum.Close();
 
                     n++;//文件循环163
                     

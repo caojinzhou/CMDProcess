@@ -10,7 +10,8 @@ namespace CMDProcess
     {
             public DateTime timeindex;
             public int userid;
-            public int stationid ;
+            //public int stationid ;
+        public int cellid;
             
 
             public UserData()
@@ -23,7 +24,8 @@ namespace CMDProcess
                 // TODO: Complete member initialization
                 timeindex = p1;
                 userid = p2;
-                stationid = p3;
+                //stationid = p3;
+            cellid = p3;
             }
     }
 
@@ -32,7 +34,7 @@ namespace CMDProcess
         public DateTime intimeindex;
         public DateTime outtimeindex;
         public int userid;
-        public int stationid;
+        public int cellid;
         public int NumST;
 
 
@@ -47,7 +49,7 @@ namespace CMDProcess
             intimeindex = p0;
             outtimeindex = p1;
             userid = p2;
-            stationid = p3;
+            cellid = p3;
             NumST = p5;
         }
         
@@ -58,7 +60,7 @@ namespace CMDProcess
         public DateTime intimeindex;
         public DateTime outtimeindex;
         public int userid;
-        public Dictionary<int, int> stationNum;
+        public Dictionary<int, int> cellNum;
         public List<UserData> DatainCluster;
 
         public CellTra2()
@@ -72,8 +74,8 @@ namespace CMDProcess
 
             userid = data.userid;
             DatainCluster = new List<UserData>();
-            stationNum = new Dictionary<int, int>();
-            stationNum.Add(data.stationid, 1);
+            cellNum = new Dictionary<int, int>();
+            cellNum.Add(data.cellid, 1);
             DatainCluster.Add(data);
             intimeindex = data.timeindex;
             outtimeindex = data.timeindex;
@@ -88,17 +90,63 @@ namespace CMDProcess
 
         private void UpdateStationNum()
         {
-            if(stationNum.ContainsKey(DatainCluster.Last().stationid))
+            if(cellNum.ContainsKey(DatainCluster.Last().cellid))
             {
-                stationNum[DatainCluster.Last().stationid]++;
+                cellNum[DatainCluster.Last().cellid]++;
             }
             else
             {
-                stationNum.Add(DatainCluster.Last().stationid, 1);
+                cellNum.Add(DatainCluster.Last().cellid, 1);
             }
         }
 
         private  void UpdateOuttimeindex()
+        {
+            outtimeindex = DatainCluster.Last().timeindex;
+        }
+    }
+
+    class CellTra3
+    {
+        public DateTime intimeindex;
+        public DateTime outtimeindex;
+        public int userid;
+        public int cellNum;
+        public int cellId;
+        public List<UserData> DatainCluster;
+
+        public CellTra3()
+        {
+
+        }
+
+        public CellTra3(UserData data)
+        {
+            // TODO: Complete member initialization
+
+            userid = data.userid;
+            DatainCluster = new List<UserData>();
+            cellNum = 0;
+            cellNum++;
+            cellId = data.cellid;
+            DatainCluster.Add(data);
+            intimeindex = data.timeindex;
+            outtimeindex = data.timeindex;
+        }
+
+        public void PutinCluster(UserData data)
+        {
+            DatainCluster.Add(data);
+            UpdateOuttimeindex();
+            cellNum++;
+        }
+
+        private void UpdateStationNum()
+        {
+
+        }
+
+        private void UpdateOuttimeindex()
         {
             outtimeindex = DatainCluster.Last().timeindex;
         }

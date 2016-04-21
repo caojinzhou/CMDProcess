@@ -249,7 +249,7 @@ namespace CMDProcess
                             HWInfo = HWIdentifiction.HomeWorkIdentify(SpecialSTUser,false);
                         }
 
-                        if(HWInfo.Item2!=0)
+                        if(HWInfo.Item2!=-1)
                         {
                             //T6:针对22点最后一小时，如果原始记录上的位置位于home位置，则单独标记为一个home活动。
 
@@ -333,23 +333,23 @@ namespace CMDProcess
 
                     foreach (var tt in userhwinfo1)
                     {
-                        if (tt.Item2 != 0 && tt.Item3 != 0)
+                        if (tt.Item2 != -1 && tt.Item3 != -1)
                         {
                             Both++;
                             if (tt.Item2 == tt.Item3)
                                 BothSame++;
                         }
-                        else if (tt.Item2 == 0 || tt.Item3 == 0)
+                        else if (tt.Item2 == -1 || tt.Item3 == -1)
                         {
-                            if (tt.Item2 != 0 && tt.Item3 == 0)
+                            if (tt.Item2 != -1 && tt.Item3 == -1)
                             {
                                 OnlyH++;
                             }
-                            else if (tt.Item3 != 0 && tt.Item2 == 0)
+                            else if (tt.Item3 != -1 && tt.Item2 == -1)
                             {
                                 OnlyW++;
                             }
-                            else if (tt.Item2 == 0 && tt.Item3 == 0)
+                            else if (tt.Item2 == -1 && tt.Item3 == -1)
                             {
                                 Neither++;
                             }

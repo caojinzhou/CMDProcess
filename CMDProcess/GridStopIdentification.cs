@@ -81,7 +81,7 @@ namespace CMDProcess
             //更改结果类
             foreach (var tt in CandiCluster)
             {
-                STResult2.Add(new CellTra(tt.intimeindex, tt.outtimeindex, tt.userid, tt.cellNum, tt.DatainCluster.Count()));
+                STResult2.Add(new CellTra(tt.intimeindex, tt.outtimeindex, tt.userid, tt.cellId, tt.DatainCluster.Count()));
             }
 
             return STResult2;

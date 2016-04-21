@@ -73,9 +73,9 @@ namespace CMDProcess
             var DescendingsortedWork = TowerWorkRank.OrderByDescending(s => s.Value);
             var DescendingsortedHome = TowerHomeRank.OrderByDescending(s => s.Value);
 
-            int Work = 0, Home = 0;
+            int Work = -1, Home = -1;
             if (DescendingsortedWork.Count() == 0)
-                Work = 0;
+                Work = -1;
             else
             {
                 //某一地点在工作的比例要大于50%，否则判断为没有找到工作地点
@@ -86,12 +86,12 @@ namespace CMDProcess
                     //AllHomeWork.SetTowerAttrib(Work, "work");
                 }
                 else
-                    Work = 0;
+                    Work = -1;
 
             }
 
             if (DescendingsortedHome.Count() == 0)
-                Home = 0;
+                Home = -1;
             else
             {
                 //某一地点在家的比例要大于50%，否则判断为没有找到家的地点
@@ -102,7 +102,7 @@ namespace CMDProcess
                     //AllHomeWork.SetTowerAttrib(Home, "home");
                 }
                 else
-                    Home = 0;
+                    Home = -1;
             }
             //将最大值存入(若没有，则为0,并返回
             return new Tuple<int, int, int>(SpecialUser.ElementAt(0).userid, Home, Work);
@@ -208,14 +208,14 @@ namespace CMDProcess
             //排序
             var DescendingsortedWork = WorkStationRank.OrderByDescending(s => s.Value);
             var DescendingsortedHome = HomeStationRank.OrderByDescending(s => s.Value);
-            int Work = 0, Home = 0;
+            int Work = -1, Home = -1;
 
             //有大于2个唯一活动点的情况
             if (index == false)
             {
 
                 if (DescendingsortedWork.Count() == 0)
-                    Work = 0;
+                    Work = -1;
                 else
                 {
                     //某一地点在工作的比例要大于50%，否则判断为没有找到工作地点
@@ -226,12 +226,12 @@ namespace CMDProcess
                         //AllHomeWork.SetTowerAttrib(Work, "work");
                     }
                     else
-                        Work = 0;
+                        Work = -1;
 
                 }
 
                 if (DescendingsortedHome.Count() == 0)
-                    Home = 0;
+                    Home = -1;
                 else
                 {
                     //某一地点在家的比例要大于50%，否则判断为没有找到家的地点
@@ -242,7 +242,7 @@ namespace CMDProcess
                         //AllHomeWork.SetTowerAttrib(Home, "home");
                     }
                     else
-                        Home = 0;
+                        Home = -1;
                 }
             }
             //只有2个唯一活动点的情况。

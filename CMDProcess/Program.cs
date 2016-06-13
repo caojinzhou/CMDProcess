@@ -223,29 +223,31 @@ namespace CMDProcess
                             else
                                 SpatialUserInfo[SpecialSTUser[0].userid].Add(SpecialSTUser[q].cellid);
                         }
+                        var qq = from w in SpecialSTUser select w.cellid;
+                        int diff2 = qq.Distinct().Count();
                         int DiffSTPoint = SpatialUserInfo[SpecialSTUser[0].userid].Distinct().Count();
 
 
-                        //T5：根据唯一停留点个数,判断不同类别的家orwork形式
+                        //T5：根据唯一停留位置个数,判断不同类别的家orwork形式
                         Tuple<int, int, int> HWInfo=null;
                         if (DiffSTPoint == 0)
                         {
                             continue;
                         }
-                        //只有1个唯一停留点，直接指定为home类别。
+                        //只有1个唯一停留位置，直接指定为home类别。
                         else if(DiffSTPoint == 1)
                         {
                             HWInfo = new Tuple<int, int, int>(SpecialSTUser[0].userid, SpecialSTUser[0].cellid, 0);
                         }
-                        //有2个唯一停留点，一个为home，一个为work
+                        //有2个唯一停留位置，一个为home，一个为work
                         else if(DiffSTPoint == 2)
                         {
-                            //专为两个停留点设计的提取算法。home和work都必须有。但可以是同一个点。
+                            //专为两个停留点设计的提取算法。home和work都必须有。但可以是同一个位置。
                             HWInfo = HWIdentifiction.HomeWorkIdentify(SpecialSTUser,true);
                         }
                         else if(DiffSTPoint > 2)
                         {
-                            //专为大于2个点停留点设计的提取算法。有约束条件，50%。
+                            //专为大于2个点停留位置设计的提取算法。有约束条件，50%。
                             HWInfo = HWIdentifiction.HomeWorkIdentify(SpecialSTUser,false);
                         }
 
@@ -314,7 +316,7 @@ namespace CMDProcess
 
                         }
 
-                        DiffSTPointByUser.Add(SpecialSTUser[0].userid, DiffSTPoint);
+                        DiffSTPointByUser.Add(SpecialSTUser[0].userid, diff2);
                         STPointCountByUser.Add(SpecialSTUser[0].userid, SpecialSTUser.Count());
 
                         SpatialUserInfo.Clear();
